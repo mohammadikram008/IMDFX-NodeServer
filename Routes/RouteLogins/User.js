@@ -348,7 +348,7 @@ router.get("/doc_appointments/:docId", async (req, res) => {
 });
 
 
-// conform Appointment 
+//Doctor  conform  Appointment 
 router.post('/conformappointment/:docId', async (req, res) => {
   try {
     const docId = req.params.docId;
@@ -373,6 +373,7 @@ router.post('/conformappointment/:docId', async (req, res) => {
     res.status(500).json('Error saving user to the database');
   }
 });
+//Cancel doctor appointment
 router.post('/cancelappointment/:id', async (req, res) => {
   try {
     const id = req.params.id;
@@ -385,7 +386,7 @@ router.post('/cancelappointment/:id', async (req, res) => {
   }
 });
 
-// get mypatient details, doctor id  
+// get mypatient details, doctor id  for doctor dashboard
 router.get("/mypatient/:docId", async (req, res) => {
 
   try {
@@ -422,5 +423,44 @@ router.get("/mypatient/:docId", async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// get mydoctor details, patient id  for patient dashboard
+router.get("/mydoctor/:userId", async (req, res) => {
+
+  try {
+    const userId = req.params.userId;
+  
+    // Fetch all appointments for the user
+    const userAppointments = await ConformAppointment.find({ userId: userId });
+    // console.log("userAppointments", userAppointments);
+    if (!userAppointments || userAppointments.length === 0) {
+      return res.status(404).json({ error: 'Appointments not found' });
+    }
+
+    // Prepare an array to store appointment details with doctor information
+    const appointmentsWithPatient = [];
+
+    // Iterate through each appointment
+    for (const appointment of userAppointments) {
+      // Fetch doctor details for each appointment
+      const doctorDetails = await doctordetails.findById(appointment.docId);
+
+      // Create an object with appointment and doctor details
+      const appointmentWithPatient = {
+        appointmentDetails: appointment,
+        doctorDetails: doctorDetails,
+      };
+
+      // Add the object to the array
+      appointmentsWithPatient.push(appointmentWithPatient);
+    }
+
+    res.status(200).json(appointmentsWithPatient);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 module.exports = router;
