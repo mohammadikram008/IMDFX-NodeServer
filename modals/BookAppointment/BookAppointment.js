@@ -10,11 +10,12 @@ const bookappointment = new mongoose.Schema({
     expiryMonth: { type: String, required: false },
     cvv: { type: String, required: false },
     cardNumber: { type: String, required: false },
-    cardName: { type: String, required: false },
+    holderName: { type: String, required: false },
     cardType: { type: String, required: false },
     selectedDate: { type: String, required: false },
     selectedTimeSlot: { type: String, required: false },
     bookingDate: { type: String, required: false },
+    bookingFor: { type: String, required: false },
 })
 const BookingAppointment = mongoose.model("BOOKINGAPPOINTMENT", bookappointment);
 module.exports = { BookingAppointment };

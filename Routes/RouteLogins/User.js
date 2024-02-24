@@ -199,11 +199,14 @@ router.post('/bookappointment', async (req, res) => {
       expiryMonth,
       cvv,
       cardNumber,
-      cardName,
+      holderName,
       cardType,
       selectedDate,
       selectedTimeSlot,
-      doc_id, bookingDate, userId } = req.body;
+      bookingFor,
+      doc_id, 
+      bookingDate,
+       userId } = req.body;
 
     // console.log(
     //   bookingType,
@@ -228,11 +231,12 @@ router.post('/bookappointment', async (req, res) => {
       expiryMonth: expiryMonth,
       cvv: cvv,
       cardNumber: cardNumber,
-      cardName: cardName,
+      holderName: holderName,
       cardType: cardType,
       selectedDate: selectedDate,
       selectedTimeSlot: selectedTimeSlot,
       bookingDate: bookingDate,
+      bookingFor:bookingFor,
       userId, userId
     });
     console.log("newBookAppointment", newBookAppointment);
