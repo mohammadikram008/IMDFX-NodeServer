@@ -4,6 +4,8 @@ const { User } = require("../../modals/Logins/UserLogin");
 const { doctordetails } = require("../../modals/DoctorDetails/Index")
 const { BookingAppointment } = require("../../modals/BookAppointment/BookAppointment")
 const { ConformAppointment } = require("../../modals/ConformAppointment/ConformAppointment")
+const { Notification } = require("../../modals/Notification/Notification")
+const { PatientProfile } = require("../../modals/PaitentProfile/PatientProfile")
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const multer = require('multer'); // for handling file uploads
@@ -352,27 +354,64 @@ router.get("/doc_appointments/:docId", async (req, res) => {
 router.post('/conformappointment/:docId', async (req, res) => {
   try {
     const docId = req.params.docId;
-    // console.log("docId", docId);
     const { appoimentdetail } = req.body;
+
     // Step 1: Delete from BookingAppointment
     await BookingAppointment.deleteOne({ _id: appoimentdetail._id });
-    console.log("user", req.body);
-    // console.log("username, email, password", username, email, password)
-    // const existingdoctor = await ConformAppointment.findOne({ userId });
 
-    // if (existingdoctor) {
-    //   return res.status(400).json('Appointment with this Patient already exists');
-    // }
-    const userId=appoimentdetail.userId;
-
-    const appointment = new ConformAppointment({ docId,userId });
+    // Step 2: Save to ConformAppointment
+    const userId = appoimentdetail.userId;
+    const appointment = new ConformAppointment({ docId, userId });
     await appointment.save();
 
-    res.status(200).json('Appointment Booked successful');
+    // Step 3: Save to Notification
+    const message = 'Your appointment has been confirmed.';
+    const newNotification = new Notification({ userId, message });
+    await newNotification.save();
+
+    res.status(200).json('Appointment Booked successfully');
   } catch (error) {
-    res.status(500).json('Error saving user to the database');
+    console.error(error);
+    res.status(500).json('Error confirming appointment');
   }
 });
+
+// Fetch all notifications for a user
+router.get('/notifications/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
+    res.json(notifications);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// API endpoint to mark a notification as read
+router.post('/markAsRead/:notificationId', async (req, res) => {
+  try {
+    const notificationId = req.params.notificationId;
+
+    // Update the notification in the database to mark it as read
+    const updatedNotification = await Notification.findByIdAndUpdate(
+      notificationId,
+      { isRead: true },
+      { new: true } // Return the updated notification
+    );
+
+    if (!updatedNotification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    res.status(200).json({ message: 'Notification marked as read', notification: updatedNotification });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
 //Cancel doctor appointment
 router.post('/cancelappointment/:id', async (req, res) => {
   try {
@@ -461,6 +500,60 @@ router.get("/mydoctor/:userId", async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// API endpoint for updating the profile
+router.post('/update-patient-profile/:userId',upload.single('image'), async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log("body",req.body);
+    const {
+      firstName,
+      lastName,
+      dateOfBirth,
+      email,
+      mobile,
+      address,
+      city,
+      state,
+      zipCode,
+      country,
+      file
+    } = req.body;
+
+    // Find the user by ID
+    const user = await User.findOne({ _id: userId });
+    ;
+
+    if (!user) {
+      return res.status(200).json({ message: 'Patient Profile  is Not Found!' });
+    }
+   // Create a new doctordetails instance with the received data
+   const patientProfile = new PatientProfile({
+    image: file ? file.path : null, // Assuming you want to store the file path
+     firstName : firstName,
+     lastName : lastName,
+     dateOfBirth : dateOfBirth,
+     email : email,
+     mobile : mobile,
+     address : address,
+     city : city,
+     state : state,
+     zipCode : zipCode,
+     country : country,
+   
+  });
+
+  // Save the data to the database
+  await patientProfile.save();
+   
+
+    res.status(200).json('Profile updated successfully');
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json('Error updating profile');
+  }
+});
+
 
 
 module.exports = router;
