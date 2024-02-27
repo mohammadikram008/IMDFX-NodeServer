@@ -103,7 +103,7 @@ router.post('/doctorlogin', async (req, res) => {
   }
 });
 
-//getpatient
+//getpatient with id
 router.get('/getpatient/:id', async (req, res) => {
   try {
     const id = req.params.id;
@@ -123,6 +123,16 @@ router.get('/getpatient/:id', async (req, res) => {
   }
 });
 
+//getpatient
+router.get('/getpatient', async (req, res) => {
+  
+  try {
+    const patientdetail = await User.find();
+    res.status(200).json(patientdetail);
+  } catch (error) {
+    res.send(error);
+  }
+});
 
 //add doctor  details
 router.post('/doctorpersnoldetails', upload.single('image'), async (req, res) => {
@@ -184,6 +194,15 @@ router.get("/doctorpersnoldetails", async (req, res) => {
   try {
     const doctordetail = await doctordetails.find();
     res.status(200).json(doctordetail);
+  } catch (error) {
+    res.send(error);
+  }
+});
+//get appointments
+router.get("/getallbookappointment", async (req, res) => {
+  try {
+    const appoimentdetail = await BookingAppointment.find();
+    res.status(200).json(appoimentdetail);
   } catch (error) {
     res.send(error);
   }
@@ -558,6 +577,119 @@ router.post('/update-patient-profile/:userId',upload.single('image'), async (req
   }
 });
 
+router.post('/update-doctor-profile/:docId',upload.single('image'), async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log("body",req.body);
+    const {
+      firstName,
+      lastName,
+      dateOfBirth,
+      email,
+      mobile,
+      address,
+      city,
+      state,
+      zipCode,
+      country,
+      file
+    } = req.body;
 
+    // Find the user by ID
+    const user = await User.findOne({ _id: userId });
+    ;
+
+    if (!user) {
+      return res.status(200).json({ message: 'Patient Profile  is Not Found!' });
+    }
+   // Create a new doctordetails instance with the received data
+   const patientProfile = new PatientProfile({
+    image: file ? file.path : null, // Assuming you want to store the file path
+     firstName : firstName,
+     lastName : lastName,
+     dateOfBirth : dateOfBirth,
+     email : email,
+     mobile : mobile,
+     address : address,
+     city : city,
+     state : state,
+     zipCode : zipCode,
+     country : country,
+   
+  });
+
+  // Save the data to the database
+  await patientProfile.save();
+   
+
+    res.status(200).json('Profile updated successfully');
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json('Error updating profile');
+  }
+});
+
+
+// change password of user
+router.post("/change-user-password/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    // Fetch user from the database
+    const user = await User.findById(userId);
+
+    // Check if the old password matches the stored password
+    if (user && user.password === oldPassword) {
+      // Update the password if old password matches
+      user.password = newPassword;
+      await user.save();
+      res.status(200).json("Password changed successfully");
+    } else {
+      res.status(400).json("Old password is incorrect");
+    }
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res.status(500).json("Error changing password");
+  }
+});
+// change password of doctor
+router.post("/change-doctor-password/:doc_Id", async (req, res) => {
+  try {
+    const doc_Id = req.params.doc_Id;
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    // Fetch user from the database
+    const user = await doctordetails.findById(doc_Id);
+
+    // Check if the old password matches the stored password
+    if (user && user.password === oldPassword) {
+      // Update the password if old password matches
+      user.password = newPassword;
+      await user.save();
+      res.status(200).json("Password changed successfully");
+    } else {
+      res.status(400).json("Old password is incorrect");
+    }
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res.status(500).json("Error changing password");
+  }
+});
+
+
+// search doctor  by specialization
+
+router.get('/doctors-by-specialty/:specialty', async (req, res) => {
+  try {
+    const specialization = req.params.specialty;
+    const doctors = await doctordetails.find({ specialization });
+   
+    res.status(200).json(doctors);
+  } catch (error) {
+    console.error('Error fetching doctors by specialty:', error);
+    res.status(500).json('Error fetching doctors by specialty');
+  }
+});
 
 module.exports = router;
