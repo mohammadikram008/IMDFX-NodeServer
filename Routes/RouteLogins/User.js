@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { User } = require("../../modals/Logins/UserLogin");
 const { doctordetails } = require("../../modals/DoctorDetails/Index")
-const { BookingAppointment } = require("../../modals/BookAppointment/BookAppointment")
+const { BookingAppointment,BookingAppointmentDetail } = require("../../modals/BookAppointment/BookAppointment")
 const { ConformAppointment } = require("../../modals/ConformAppointment/ConformAppointment")
 const { Notification } = require("../../modals/Notification/Notification")
 const { PatientProfile } = require("../../modals/PaitentProfile/PatientProfile")
@@ -14,6 +14,7 @@ const app = express();
 const cors = require("cors");
 
 const { authenticateToken } = require('../../authentication');
+const { log } = require('console');
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
@@ -260,8 +261,26 @@ router.post('/bookappointment', async (req, res) => {
       bookingFor:bookingFor,
       userId, userId
     });
+    const newBookAppointmentDetail = new BookingAppointmentDetail({
+      doc_id: doc_id,
+      bookingType: bookingType,
+      gender: gender,
+      patientAge: patientAge,
+      expiryYear: expiryYear,
+      expiryMonth: expiryMonth,
+      cvv: cvv,
+      cardNumber: cardNumber,
+      holderName: holderName,
+      cardType: cardType,
+      selectedDate: selectedDate,
+      selectedTimeSlot: selectedTimeSlot,
+      bookingDate: bookingDate,
+      bookingFor:bookingFor,
+      userId, userId
+    });
     console.log("newBookAppointment", newBookAppointment);
     await newBookAppointment.save();
+    await newBookAppointmentDetail.save();
 
     res.status(200).json('Book appointment successfully');
     // if (existingUser) {
@@ -689,6 +708,33 @@ router.get('/doctors-by-specialty/:specialty', async (req, res) => {
   } catch (error) {
     console.error('Error fetching doctors by specialty:', error);
     res.status(500).json('Error fetching doctors by specialty');
+  }
+});
+
+
+// get appointment detail with doctor and user detail
+router.get('/appointment-alldetails', async (req, res) => {
+  try {
+    const appointments = await BookingAppointmentDetail.find();
+// console.log("appointments",appointments);
+    const appointmentsWithDetails = await Promise.all(
+      appointments.map(async (appointment) => {
+        console.log("appointment",appointment.doc_id);
+        const doctorDetail = await doctordetails.findById({_id:appointment.doc_id});
+        const userDetail = await User.findById({_id:appointment.userId});
+
+        return {
+          bookingDetail: appointment,
+          doctorDetail,
+          userDetail,
+        };
+      })
+    );
+    console.log("appointmentsWithDetails",appointmentsWithDetails);
+    res.json(appointmentsWithDetails);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
