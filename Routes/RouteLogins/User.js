@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { User } = require("../../modals/Logins/UserLogin");
-const { doctordetails } = require("../../modals/DoctorDetails/Index")
+const { doctordetails,pendingdoctors } = require("../../modals/DoctorDetails/Index")
 const { BookingAppointment,BookingAppointmentDetail } = require("../../modals/BookAppointment/BookAppointment")
 const { ConformAppointment } = require("../../modals/ConformAppointment/ConformAppointment")
 const { Notification } = require("../../modals/Notification/Notification")
@@ -147,7 +147,7 @@ router.post('/doctorpersnoldetails', upload.single('image'), async (req, res) =>
       return res.status(200).json({ message: 'Doctor is already registered!' });
     }
     // Create a new doctordetails instance with the received data
-    const newDoctorDetails = new doctordetails({
+    const newDoctorDetails = new pendingdoctors({
       image: file ? file.path : null, // Assuming you want to store the file path
       name: body.name,
       email: body.email,
@@ -194,6 +194,16 @@ router.post('/doctorpersnoldetails', upload.single('image'), async (req, res) =>
 router.get("/doctorpersnoldetails", async (req, res) => {
   try {
     const doctordetail = await doctordetails.find();
+    res.status(200).json(doctordetail);
+  } catch (error) {
+    res.send(error);
+  }
+});
+
+//get pending doctor details for approved
+router.get("/pendingdoctordetail", async (req, res) => {
+  try {
+    const doctordetail = await pendingdoctors.find();
     res.status(200).json(doctordetail);
   } catch (error) {
     res.send(error);
