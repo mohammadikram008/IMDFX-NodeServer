@@ -16,6 +16,7 @@ const bookappointment = new mongoose.Schema({
     selectedTimeSlot: { type: String, required: false },
     bookingDate: { type: String, required: false },
     bookingFor: { type: String, required: false },
+    Fees: { type: String, required: false },
 })
 const bookappointmentdetail = new mongoose.Schema({
     doc_id: { type: String, required: false },
@@ -33,6 +34,7 @@ const bookappointmentdetail = new mongoose.Schema({
     selectedTimeSlot: { type: String, required: false },
     bookingDate: { type: String, required: false },
     bookingFor: { type: String, required: false },
+    Fees: { type: String, required: false },
 })
 const BookingAppointment = mongoose.model("BOOKINGAPPOINTMENT", bookappointment);
 const BookingAppointmentDetail = mongoose.model("BOOKINGAPPOINTMENTDetail", bookappointmentdetail);
