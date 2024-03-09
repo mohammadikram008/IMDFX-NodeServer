@@ -71,6 +71,9 @@ router.post('/signup', async (req, res) => {
     res.status(500).json('Error saving user to the database');
   }
 });
+router.post('/', async (req, res) => {
+  res.send("heloo")
+});
 
 // user Login  route
 router.post('/login', async (req, res) => {
@@ -158,7 +161,7 @@ router.get('/getpatient', async (req, res) => {
 //add doctor  details
 router.post('/doctorpersnoldetails', upload.single('image'), async (req, res) => {
   try {
-    const { body, file } = req;
+    const { body, file,verification } = req;
     // console.log("body", body)
     const { email } = body.email
     const doctordetail = await doctordetails.find({ email });
@@ -169,6 +172,7 @@ router.post('/doctorpersnoldetails', upload.single('image'), async (req, res) =>
     // Create a new doctordetails instance with the received data
     const newDoctorDetails = new pendingdoctors({
       image: file ? file.path : null, // Assuming you want to store the file path
+      image: verification ? verification.path : null, // Assuming you want to store the file path
       name: body.name,
       email: body.email,
       password: body.password,
@@ -179,6 +183,8 @@ router.post('/doctorpersnoldetails', upload.single('image'), async (req, res) =>
       college: body.college,
       license: body.license,
       yearofexperience: body.yearofexperience,
+      country:body.country,
+      state:body.state,
       once: {
         date: body['once.date'],
         timefrom: body['once.timefrom'],
